@@ -43,6 +43,7 @@ def blank_lines(logical_line, blank_lines, indent_level, line_number,
     E303: def a():\n\n\n\n    pass
     E304: @decorator\n\ndef a():\n    pass
     E305: "comment"\n\n\ndef a():\n    pass
+    E306: variable="value"\ndef a():   pass
     """
 
     def isClassDefDecorator(thing):
@@ -63,16 +64,19 @@ def blank_lines(logical_line, blank_lines, indent_level, line_number,
             # There should only be 1 line or less between docstrings and
             # the next function
             if DOCSTRING_REGEX.match(previous_logical) and max_blank_lines > 1:
-                return (0, "E305 too many blank lines after docstring (%d)" %
+                return 0, ("E305 too many blank lines after docstring (%d)" %
                     max_blank_lines)
+
             # between first level functions, there should be 2 blank lines.
             # any further indended functions can have one or zero lines
             if not (max_blank_lines == 2 or
                     indent_level > 4 or
-                    previous_indent_level < indent_level or
-                    not isClassDefDecorator(previous_logical)):
+                    previous_indent_level < indent_level):
                 return 0, ("E301 expected 2 blank lines, found %d" %
-                           max_blank_lines)
+                               max_blank_lines)
+            # if not max_blank_lines:
+            #     return 0, "E306 expected 1 or 2 blank lines, not 0"
+
         elif max_blank_lines != 3:
             return 0, "E302 expected 3 blank lines, found %d" % max_blank_lines
     elif max_blank_lines > 1 and indent_level:
