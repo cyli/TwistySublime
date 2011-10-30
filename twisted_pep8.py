@@ -44,6 +44,12 @@ def blank_lines(logical_line, blank_lines, indent_level, line_number,
     E304: @decorator\n\ndef a():\n    pass
     E305: "comment"\n\n\ndef a():\n    pass
     """
+
+    def isClassDefDecorator(thing):
+        return (thing.startswith('def ') or
+                thing.startswith('class ') or
+                thing.startswith('@'))
+
     if line_number == 1:
         return  # Don't expect blank lines before the first line
     max_blank_lines = max(blank_lines, blank_lines_before_comment)
@@ -52,9 +58,7 @@ def blank_lines(logical_line, blank_lines, indent_level, line_number,
             return 0, "E304 blank lines found after function decorator"
     elif max_blank_lines > 3 or (indent_level and max_blank_lines == 3):
         return 0, "E303 too many blank lines (%d)" % max_blank_lines
-    elif (logical_line.startswith('def ') or
-          logical_line.startswith('class ') or
-          logical_line.startswith('@')):
+    elif isClassDefDecorator(logical_line):
         if indent_level:
             # There should only be 1 line or less between docstrings and
             # the next function
@@ -66,8 +70,7 @@ def blank_lines(logical_line, blank_lines, indent_level, line_number,
             if not (max_blank_lines == 2 or
                     indent_level > 4 or
                     previous_indent_level < indent_level or
-                    DOCSTRING_REGEX.match(previous_logical) or
-                    previous_logical.startswith('#')):
+                    not isClassDefDecorator(previous_logical)):
                 return 0, ("E301 expected 2 blank lines, found %d" %
                            max_blank_lines)
         elif max_blank_lines != 3:
@@ -94,4 +97,7 @@ def _main():
     except:
         print 'Unable to import pep8'
 
+
+
 if __name__ == '__main__':
+    _main()

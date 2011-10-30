@@ -1,1 +1,5 @@
 My attempt to make twisted development nicer for myself in sublime
+
+I highly recommend installing SublimeLinter
+(https://github.com/Kronuz/SublimeLinter), which checks source files with
+pyflakes and pep8 (which can be monkeypatched by what's in this repo)
