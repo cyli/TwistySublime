@@ -18,6 +18,7 @@ from pep8 import DOCSTRING_REGEX
 import sys
 
 
+
 def blank_lines(logical_line, blank_lines, indent_level, line_number,
                 previous_logical, previous_indent_level,
                 blank_lines_before_comment):
@@ -51,42 +52,53 @@ def blank_lines(logical_line, blank_lines, indent_level, line_number,
                 thing.startswith('class ') or
                 thing.startswith('@'))
 
+    # Don't expect blank lines before the first line
     if line_number == 1:
-        return  # Don't expect blank lines before the first line
+        return
+
     max_blank_lines = max(blank_lines, blank_lines_before_comment)
+    previous_is_comment = DOCSTRING_REGEX.match(previous_logical)
+
+    # no blank lines after a decorator
     if previous_logical.startswith('@'):
         if max_blank_lines:
             return 0, "E304 blank lines found after function decorator"
-    elif max_blank_lines > 3 or (indent_level and max_blank_lines == 3):
+
+    # should not have more than 3 blank lines
+    elif max_blank_lines > 3 or (indent_level and max_blank_lines > 2):
         return 0, "E303 too many blank lines (%d)" % max_blank_lines
+
     elif isClassDefDecorator(logical_line):
         if indent_level:
             # There should only be 1 line or less between docstrings and
             # the next function
-            if DOCSTRING_REGEX.match(previous_logical) and max_blank_lines > 1:
-                return 0, ("E305 too many blank lines after docstring (%d)" %
-                    max_blank_lines)
+            if previous_is_comment:
+                if max_blank_lines > 1:
+                    return 0, (
+                        "E305 too many blank lines after docstring (%d)" %
+                        max_blank_lines)
 
             # between first level functions, there should be 2 blank lines.
             # any further indended functions can have one or zero lines
-            if not (max_blank_lines == 2 or
-                    indent_level > 4 or
-                    previous_indent_level < indent_level):
-                return 0, ("E301 expected 2 blank lines, found %d" %
-                               max_blank_lines)
-            # if not max_blank_lines:
-            #     return 0, "E306 expected 1 or 2 blank lines, not 0"
+            else:
+                if not (max_blank_lines == 2 or
+                        indent_level > 4 or
+                        previous_indent_level <= indent_level):
+                    return 0, ("E301 expected 2 blank lines, found %d" %
+                                   max_blank_lines)
 
-        elif max_blank_lines != 3:
+        # top level, there should be 3 blank lines between class/function
+        # definitions (but not necessarily after varable declarations)
+        elif previous_indent_level and max_blank_lines != 3:
             return 0, "E302 expected 3 blank lines, found %d" % max_blank_lines
+
     elif max_blank_lines > 1 and indent_level:
-        return 0, "E303 too many blank lines expected (%d)" % max_blank_lines
+        return 0, "E303 too many blank lines, expected (%d)" % max_blank_lines
 
 
 
 try:
     import pep8
-
     for name in ['blank_lines']:
         setattr(sys.modules['pep8'], name, globals()[name])
 except:
